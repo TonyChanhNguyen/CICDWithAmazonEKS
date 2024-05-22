@@ -1,21 +1,24 @@
 ---
-title : "Deploy database on Amazon EKS"
+title : "Create CI/CD Pipeline to deploy application on Amazon EKS Cluster"
 date :  "`r Sys.Date()`" 
 weight : 1 
 chapter : false
 ---
-# Deploy database on Amazon EKS
+# Create CI/CD Pipeline to deploy application to Amazon EKS Cluster
 
 ### Overview
 
-This workshop will provide a high level overview on how to integrate MySQL Database for application that run on Amazon EKS Cluster via Amazon Elastic Block Storage (EBS) and Amazon RDS services.
+Continuous Integration and Continuous Deployment (CI/CD) pipelines are essential for automating the deployment of applications. This workshop outlines the steps required to set up a CI/CD pipeline for deploying applications to an Amazon Elastic Kubernetes Service (EKS) cluster.
 
-![Deploy database on Amazon EKS](images/eksebsmysqlrds.png?pc=60pt)
+![Create CI/CD Pipeline to deploy application to Amazon EKS](images/ekscicd.png?pc=60pt)
 
 ### Content
 
 1. [Introduction](1-introduce/)
 2. [Prerequisites](2-prerequiste/)
-3. [Deploy database on Amazon EKS via EBS Volume](3-eksdbwithebs/)
-4. [Deploy database on Amazon EKS via Amazon RDS](4-eksdbwithrds/)
-5. [Clean up resources](5-cleanup/)
+3. [Create Amazon ECR](3-interactwithecr/)
+4. [Create AWS CodeCommit](4-createcodecommit/)
+5. [Create STS Assume IAM Role for AWS CodeBuild](5-createstsiamrole/)
+6. [Create AWS CodePipeline](6-createpipeline/)
+7. [Verify the result](7-verifyresult/)
+8. [Cleanup resources](8-cleanup/)

@@ -5,222 +5,179 @@ weight : 5
 chapter : false
 pre : " <b> 2.5 </b> "
 ---
-
-Trong chương này, chúng ta sẽ tải xuống một ứng dụng mẫu **FCJ Management**.
-
-### Tải xuống ứng dụng.
-1. Kiểm tra phiên bản của Git.
+### Tạo ứng dụng
+1. Tại cửa sổ lệnh Cloud9, nhập câu lệnh bên dưới để tạo thư mục mới cho ứng dụng.
 ```
-git version
+mkdir app
+cd app
 ```
 ![Tạo ứng dụng](../../../images/2.prerequisites/2.5.createapp/2.5.1.createapp.png?pc=60pt)
 
-2. Nâng cấp Git lên phiên bản mới nhất.
+2. Tạo tệp tên **index.html** bên trong **app**.
 ```
-sudo yum update git
+touch index.html
+ls 
 ```
 ![Tạo ứng dụng](../../../images/2.prerequisites/2.5.createapp/2.5.2.createapp.png?pc=60pt)
 
-3. Tạo và di chuyển đến thư mục làm việc.
+3. Mở tệp **index.html**, dán đoạn code bên dưới và lưu lại.
 ```
-mkdir fcj-user-management
-cd fcj-user-management
+<!DOCTYPE html>
+<html>
+   <body style="background-color:rgb(228, 250, 210);">
+      <h1>Welcome to First Cloud Journey - App Version - V1 </h1>
+      <h3>Create CICD Pipeline to deploy application on Amazon EKS Cluster Workshop</h3>
+      <p>Application Name: App1</p>
+   </body>
+</html>
 ```
 ![Tạo ứng dụng](../../../images/2.prerequisites/2.5.createapp/2.5.3.createapp.png?pc=60pt)
 
-4. Tải xuống ứng dụng.
+4. Tạo **Dockerfile**.
 ```
-git clone https://github.com/First-Cloud-Journey/000004-EC2.git
+cd ..
+touch Dockerfile
 ```
 ![Tạo ứng dụng](../../../images/2.prerequisites/2.5.createapp/2.5.4.createapp.png?pc=60pt)
 
-5. Liệt kê tất cả tài nguyên của ứng dụng.
+5. Mở **Dockerfile**, dán đoạn code bên dưới và lưu lại.
 ```
-ls
-ls 000004-EC2
+FROM nginx
+COPY app /usr/share/nginx/html/app1
 ```
 ![Tạo ứng dụng](../../../images/2.prerequisites/2.5.createapp/2.5.5.createapp.png?pc=60pt)
 
-6. Đổi tên thư mục **000004-EC2** thành **Application**.
+### Tạo tệp Manifest
+1. Tạo thư mục mới để chứa các tệp Manifest.
 ```
-mv 000004-EC2 Application
-```
-![Tạo ứng dụng](../../../images/2.prerequisites/2.5.createapp/2.5.6.createapp.png?pc=60pt)
-
-7. Liệt kê lại tất cả tài nguyên của ứng dụng.
-```
+mkdir kube-manifest
 ls
-ls Application
 ```
-![Tạo ứng dụng](../../../images/2.prerequisites/2.5.createapp/2.5.7.createapp.png?pc=60pt)
-8. Di chuyển đến thư mục ứng dụng và cài đặt các gói phụ thuộc của ứng dụng trên **package.json**.
-```
-cd Application
-npm install
-```
-![Tạo ứng dụng](../../../images/2.prerequisites/2.5.createapp/2.5.8.createapp.png?pc=60pt)
-9. Khởi chạy ứng dụng.
-```
-node app.js
-```
-![Tạo ứng dụng](../../../images/2.prerequisites/2.5.createapp/2.5.9.createapp.png?pc=60pt)
+![Tạo tệp Manifest](../../../images/2.prerequisites/2.5.createapp/2.5.6.createapp.png?pc=60pt)
 
-Ứng dụng sẽ trả về lỗi **Fail to connect to database**, bởi vì chưa có CSDL MySQL được tạo và cung cấp cho ứng dụng để sử dụng.
+2. Tạo tệp mới **01-cicd-app-Deployment.yaml**.
+```
+touch kube-manifest/01-cicd-app-Deployment.yaml
+```
+![Tạo tệp Manifest](../../../images/2.prerequisites/2.5.createapp/2.5.7.createapp.png?pc=60pt)
 
-Bây giờ chúng ta sẽ đóng gói ứng dụng thành Container Image bằng Docker. CSDL MySQL sẽ được cung cấp ở các phần tiếp theo.
+3. Mở tệp **01-cicd-app-Deployment.yaml**, dán đoạn code bên dưới và lưu lại.
+```
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fcj-cicd-deployment
+  labels:
+    app: fcj-cicd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fcj-cicd
+  template:
+    metadata:
+      labels:
+        app: fcj-cicd
+    spec:
+      containers:
+        - name: fcj-cicd
+          image: CONTAINER_IMAGE
+          ports:
+            - containerPort: 80
+```
+![Tạo tệp Manifest](../../../images/2.prerequisites/2.5.createapp/2.5.8.createapp.png?pc=60pt)
 
+4. Tạo tệp mới **02-cicd-app-NodePort-svc.yaml**.
+```
+touch kube-manifest/02-cicd-app-NodePort-svc.yaml
+```
+![Tạo tệp Manifest](../../../images/2.prerequisites/2.5.createapp/2.5.9.createapp.png?pc=60pt)
 
-### Đóng gói ứng dụng
-1. Kiểm tra phiên bản của Docker.
+5. Mở tệp **02-cicd-app-NodePort-svc.yaml**, dán đoạn code bên dưới và lưu lại.
 ```
-docker version
+apiVersion: v1
+kind: Service
+metadata:
+  name: fcj-cicd-nodeport-service
+  labels:
+    app: fcj-cicd
+spec:
+  type: NodePort
+  selector:
+    app: fcj-cicd
+  ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 30000
 ```
-![Tạo ứng dụng](../../../images/2.prerequisites/2.5.createapp/2.5.10.createapp.png?pc=60pt)
+![Tạo tệp Manifest](../../../images/2.prerequisites/2.5.createapp/2.5.10.createapp.png?pc=60pt)
 
-2. Tạo tệp **Dockerfile**.
+### Tạo buildspec.yaml
+1. Tạo tệp tên **buildspec.yaml**.
 ```
-touch Dockerfile
-```
-![Tạo ứng dụng](../../../images/2.prerequisites/2.5.createapp/2.5.11.createapp.png?pc=60pt)
-
-3. Mở tệp **Dockerfile**, dán đoạn mã code bên dưới và lưu lại.
-```cmd
-# Use an official Node.js runtime as a parent image
-FROM node:13-alpine
-# Set the working directory in the container
-WORKDIR app
-# Copy package.json and package-lock.json to the working directory
-COPY package*.json ./
-# Install dependencies
-RUN npm install
-# Copy the rest of the application code
-COPY . .
-# Expose the port the app runs on
-EXPOSE 5000
-# Command to run the application
-CMD ["npm","start"]
-```
-![Tạo ứng dụng](../../../images/2.prerequisites/2.5.createapp/2.5.12.createapp.png?pc=60pt)
-
-4. Tạo tệp **.dockerignore** để làm giảm dung lượng cho Container Image.
-```
-touch .dockerignore
-```
-![Tạo ứng dụng](../../../images/2.prerequisites/2.5.createapp/2.5.13.createapp.png?pc=60pt)
-
-5. Nhấn vào biểu tượng **Settings**, chọn **Show Hidden Files** để nhìn thấy tệp ẩn **.dockerignore**.
-![Tạo ứng dụng](../../../images/2.prerequisites/2.5.createapp/2.5.14.createapp.png?pc=60pt)
-
-6. Mở tệp **.dockerignore**, dán đoạn mã code bên dưới và lưu lại.
-```
-.git
-node_modules
-Dockerfile
-```
-![Tạo ứng dụng](../../../images/2.prerequisites/2.5.createapp/2.5.15.createapp.png?pc=60pt)
-
-7. Liệt kê tất cả Image trong máy chủ. Đảm bảo rằng không có Image nào tên **fcj-management** bởi vì chúng ta sẽ dùng tên này để đặt cho Container Image.
-```
-docker images
+touch buildspec.yaml
 ```
 
-8. Xây dựng ứng dụng thành Container Image.
+2. Mở tệp **buildspec.yaml**, dán đoạn code bên dưới. Tại dòng 18, thay thế ```<REPLACE-WITH-YOUR-ACCOUNT-ID>``` với Account ID của bạn sau đó.
 ```
-docker build -t fcj-management:v1 .
+version: 0.2
+phases:
+  install:
+    commands:
+      - echo "Install Phase - Nothing to do using latest Amazon Linux Docker Image for CodeBuild which has all AWS Tools - https://github.com/aws/aws-codebuild-docker-images/blob/master/al2/x86_64/standard/3.0/Dockerfile"
+  pre_build:
+      commands:
+        # Docker Image Tag with Date Time & Code Buiild Resolved Source Version
+        - TAG="$(date +%Y-%m-%d.%H.%M.%S).$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | head -c 8)"
+        # Update Image tag in our Kubernetes Deployment Manifest        
+        - echo "Update Image tag in kube-manifest..."
+        - sed -i 's@CONTAINER_IMAGE@'"$REPOSITORY_URI:$TAG"'@' kube-manifest/01-cicd-app-Deployment.yaml
+        # Verify AWS CLI Version        
+        - echo "Verify AWS CLI Version..."
+        - aws --version
+        # Login to ECR Registry for docker to push the image to ECR Repository
+        - echo "Login in to Amazon ECR..."
+        - aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin <REPLACE-WITH-YOUR-ACCOUNT-ID>.dkr.ecr.ap-southeast-1.amazonaws.com
+        # Update Kube config Home Directory
+        - export KUBECONFIG=$HOME/.kube/config
+  build:
+    commands:
+      # Build Docker Image
+      - echo "Build started on `date`"
+      - echo "Building the Docker image..."
+      - docker build --tag $REPOSITORY_URI:$TAG .
+  post_build:
+    commands:
+      # Push Docker Image to ECR Repository
+      - echo "Build completed on `date`"
+      - echo "Pushing the Docker image to ECR Repository"
+      - docker push $REPOSITORY_URI:$TAG
+      - echo "Docker Image Push to ECR Completed -  $REPOSITORY_URI:$TAG"    
+      # Extracting AWS Credential Information using STS Assume Role for kubectl
+      - echo "Setting Environment Variables related to AWS CLI for Kube Config Setup"          
+      - CREDENTIALS=$(aws sts assume-role --role-arn $EKS_KUBECTL_ROLE_ARN --role-session-name codebuild-kubectl --duration-seconds 900)
+      - export AWS_ACCESS_KEY_ID="$(echo ${CREDENTIALS} | jq -r '.Credentials.AccessKeyId')"
+      - export AWS_SECRET_ACCESS_KEY="$(echo ${CREDENTIALS} | jq -r '.Credentials.SecretAccessKey')"
+      - export AWS_SESSION_TOKEN="$(echo ${CREDENTIALS} | jq -r '.Credentials.SessionToken')"
+      - export AWS_EXPIRATION=$(echo ${CREDENTIALS} | jq -r '.Credentials.Expiration')
+      # Setup kubectl with our EKS Cluster              
+      - echo "Update Kube Config"      
+      - aws eks update-kubeconfig --name $EKS_CLUSTER_NAME
+      # Apply changes to our Application using kubectl
+      - echo "Apply changes to kube manifest"            
+      - kubectl apply -f kube-manifest/
+      - echo "Completed applying changes to Kubernetes Objects"           
+      # Create Artifacts which we can use if we want to continue our pipeline for other stages
+      - printf '[{"name":"01-cicd-app-Deployment.yaml","imageUri":"%s"}]' $REPOSITORY_URI:$TAG > build.json
+      # Additional Commands to view your credentials      
+      #- echo "Credentials Value is..  ${CREDENTIALS}"      
+      #- echo "AWS_ACCESS_KEY_ID...  ${AWS_ACCESS_KEY_ID}"            
+      #- echo "AWS_SECRET_ACCESS_KEY...  ${AWS_SECRET_ACCESS_KEY}"            
+      #- echo "AWS_SESSION_TOKEN...  ${AWS_SESSION_TOKEN}"            
+      #- echo "AWS_EXPIRATION...  $AWS_EXPIRATION"             
+      #- echo "EKS_CLUSTER_NAME...  $EKS_CLUSTER_NAME"             
+artifacts:
+  files: 
+    - build.json   
+    - kube-manifests/*
 ```
-![Tạo ứng dụng](../../../images/2.prerequisites/2.5.createapp/2.5.16.createapp.png?pc=60pt)
-
-9. Sau khi quy trình này hoàn tất. Hãy liệt kê lại tất cả Image trong máy chủ làm việc.
-```
-docker images
-```
-![Tạo ứng dụng](../../../images/2.prerequisites/2.5.createapp/2.5.17.createapp.png?pc=60pt)
-
-Container Image tên **fcj-management** với nhãn **v1** được tạo thành công từ ứng dụng **FCJ Management**. Bây giờ hãy sử dụng Docker để triển khai ứng dụng từ Container Image vừa tạo cho mục đích kiểm thử.
-
-10. Thực thi câu lệnh bên dưới để triển khai ứng dụng từ Container Image vừa tạo.
-```
-docker run -d --name testing-application -e PORT=8080 -p 8080:8080 fcj-management:v1
-```
-![Tạo ứng dụng](../../../images/2.prerequisites/2.5.createapp/2.5.18.createapp.png?pc=60pt)
-
-11. Liệt kê các process đang chạy bên trong máy chủ làm việc.
-```
-docker ps
-```
-![Tạo ứng dụng](../../../images/2.prerequisites/2.5.createapp/2.5.20.createapp.png?pc=60pt)
-
-12. Kiểm tra Log của ứng dụng.
-```
-docker logs testing-application
-```
-![Tạo ứng dụng](../../../images/2.prerequisites/2.5.createapp/2.5.21.createapp.png?pc=60pt)
-
-Lỗi xuất hiện trên log cũng là **Fail to connect to database**. Có nghĩa Container Image đã được xây dụng thành công.
-
-13. Hãy xóa tất cả Process đang chạy.
-```
-docker stop testing-application
-docker rm testing-application
-docker ps -a
-```
-![Tạo ứng dụng](../../../images/2.prerequisites/2.5.createapp/2.5.22.createapp.png?pc=60pt)
-
-
-### Đẩy Container Image lên DockerHub
-Trong bước này, chúng ta sẽ đẩy Container Image vừa tạo lên DockerHub cho Amazon EKS Cluster có thể kéo về để chạy Pod. Vì thế chúng ta sẽ không đào sâu vào việc làm thế nào để sử dụng DockerHub, chi tiết truy cập [DockerHub Docs](https://docs.docker.com/).
-
-1. Đăng nhập vào [DockerHub](https://hub.docker.com/repository/docker) với tài khoản của bạn.
-2. Tạo một Repository tên ```fcj-management```.
-![Tạo ứng dụng](../../../images/2.prerequisites/2.5.createapp/2.5.23.createapp.png?pc=60pt)
-
-3. Đi đến [DockerHub Security](https://hub.docker.com/settings/security) để tạo Access Token mới cho máy chủ làm việc Cloud9 đăng nhập.
-4. Nhấn **New Access Token**.
-![Tạo ứng dụng](../../../images/2.prerequisites/2.5.createapp/2.5.24.createapp.png?pc=60pt)
-
-5. Nhập tại **Access Token Description** là ```Access Token for FCJ Workshop```.
-6. Giữ mặc định **Access Permissions** (với quyền Read, Write, Delete).
-7. Sau đó, nhấn **Generate**.
-![Tạo ứng dụng](../../../images/2.prerequisites/2.5.createapp/2.5.25.createapp.png?pc=60pt)
-
-8. Lưu mã Access Token lại để sử dụng sau.
-![Tạo ứng dụng](../../../images/2.prerequisites/2.5.createapp/2.5.26.createapp.png?pc=60pt)
-
-9. Trở lại cửa sổ lệnh Cloud9, đăng nhập vào DockerHub.
-```
-docker login -u firstcloudjourneypcr
-```
-
-10. Nhập Access Token nếu bị hỏi **Password**.
-![Tạo ứng dụng](../../../images/2.prerequisites/2.5.createapp/2.5.27.createapp.png?pc=60pt)
-
-
-Để đẩy Container Image lên DockerHub repository. Repository của Container Image phải khớp với tên Repository trên DockerHub. 
-
-11. Để làm điều đó, chúng ta sẽ gắn nhãn cho Container Image.
-```
-docker tag fcj-management:v1 firstcloudjourneypcr/fcj-management:v1
-```
-
-![Tạo ứng dụng](../../../images/2.prerequisites/2.5.createapp/2.5.28.createapp.png?pc=60pt)
-
-12. Liệt kê tất cả Image trong máy chủ làm việc.
-```
-docker images
-```
-
-![Tạo ứng dụng](../../../images/2.prerequisites/2.5.createapp/2.5.29.createapp.png?pc=60pt)
-
-Cho một Image mới được chép lại với Repository tên là **firstcloudjourneypcr/fcj-management**, nhãn và **v1**.
-13. Bây giờ, hãy đẩy Container Image lên DockerHub.
-```
-docker push firstcloudjourneypcr/fcj-management:v1
-```
-
-![Tạo ứng dụng](../../../images/2.prerequisites/2.5.createapp/2.5.30.createapp.png?pc=60pt)
-
-14. Đi đến DockerHub Repository **firstcloudjourneypcr/fcj-management** để kiểm tra.
-
-![Tạo ứng dụng](../../../images/2.prerequisites/2.5.createapp/2.5.31.createapp.png?pc=60pt)
-
-Có một Image mới vừa được đẩy lên DockerHub Repository với tag là **v1**.
